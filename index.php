@@ -1,5 +1,5 @@
 <?php
-
+//Note Application
 //function for console log
 function console_log($output, $with_script_tags = true)
 {

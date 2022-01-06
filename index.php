@@ -42,19 +42,27 @@ if (!$resultOfTable) {
     console_log("\nTable Creation Successful\n");
 }
 
+if(isset($_GET['delete'])){
+    $sno = $_GET['delete'];
+    $delete = true;
+    $sql = "DELETE FROM `notes` WHERE `sno` = $sno";
+    $result = mysqli_query($conn, $sql);
+  }
+
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST["titleEdit"])) {
         $sno = $_POST["snoEdit"];
         $titleEdit = $_POST["titleEdit"];
         $descriptionEdit = $_POST["descriptionEdit"];
         $updatedEdit = "UPDATE `notes` SET `title`='$titleEdit' , `description`='$descriptionEdit' WHERE `notes`.`sno`=$sno";
-        $result = mysqli_query($conn, $updatedEdit);
-        if (!$result) {
+        $update = mysqli_query($conn, $updatedEdit);
+        if (!$update) {
             console_log(mysqli_error($conn));
         } else {
             console_log("Updated Successfully");
         }
-    } else {
+    } else  {
         $title = $_POST["title"];
         $description = $_POST["description"];
         if (empty($title) || empty($description)) {
@@ -62,13 +70,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         //inserting into a table
         $insertingData = "INSERT INTO `notes` ( `title`, `description`) VALUES ('$title', '$description');";
-        $insertStatus = mysqli_query($conn, $insertingData);
-        if (!$insertStatus) {
+        $insert = mysqli_query($conn, $insertingData);
+        if (!$insert) {
             console_log("Data Insertion Failed " . mysqli_error($conn));
         } else {
             console_log("Data Insertion Successful ");
         }
     }
+    
 }
 ?>
 <!DOCTYPE html>
@@ -100,7 +109,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $result = mysqli_query($conn, $detail);
         $num = mysqli_num_rows($result);
         if ($num > 0) {
-
             echo '<div class="container my-4">' .
                 ' <table class="table" id="myTable">' .
                 '   <thead>' .
@@ -110,7 +118,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 '     <th scope="col">Description</th>' .
                 '   </tr>';
         }
-
         ?>
         <?php
         $detail = "SELECT * FROM `notes`";
@@ -125,12 +132,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <th scope='row'>" . $sno . "</th>
                 <td>" . $row['title'] . "</td>
                 <td>" . $row['description'] . "</td>
-                <td> <button onclick='hideDiv()' class='edit btn btn-sm btn-primary' id=" . $row['sno'] . ">Edit</button> <button class='delete btn btn-sm btn-primary' id=d" . $row['sno'] . ">Delete</button>  </td>
+                <td> <button onclick='hideDiv()' class='edit btn btn-sm btn-primary' id=" . $row['sno'] . ">Edit</button> <button class='delete btn btn-sm btn-primary' id=d" . $row['sno'] . ">Delete </button>  </td>
               </tr>";
         }
         ?>
         </thead>
     </div>
+
     <div style="display:none;" id="editBtn">
         <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST">
             <div class="modal-body">
@@ -139,7 +147,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <label for="title">Note Title</label>
                     <input type="text" class="form-control" id="titleEdit" name="titleEdit" aria-describedby="emailHelp">
                 </div>
-
                 <div class="form-group">
                     <label for="desc">Note Description</label>
                     <textarea class="form-control" id="descriptionEdit" name="descriptionEdit" rows="3"></textarea>
@@ -151,12 +158,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </form>
     </div>
+
+    <?php
+    global $insert;
+  if($insert){
+    echo "<div class='alert alert-success alert-dismissible fade show' role='alert'>
+    <strong>Success!</strong> Your note has been inserted successfully
+    <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+      <span aria-hidden='true'>×</span>
+    </button>
+  </div>";
+  }
+  ?>
+  <?php
+  global $delete;
+  if($delete){
+    echo "<div class='alert alert-success alert-dismissible fade show' role='alert'>
+    <strong>Success!</strong> Your note has been deleted successfully
+    <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+      <span aria-hidden='true'>×</span>
+    </button>
+  </div>";
+  }
+  ?>
+  <?php
+  global $update;
+  if($update){
+    echo "<div class='alert alert-success alert-dismissible fade show' role='alert'>
+    <strong>Success!</strong> Your note has been updated successfully
+    <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+      <span aria-hidden='true'>×</span>
+    </button>
+  </div>";
+  }
+  ?>
+
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-    <script src="//cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#myTable').DataTable();
@@ -188,7 +226,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 if (confirm("Are you sure you want to delete this note!")) {
                     console.log("yes");
-                    window.location = `<?php echo $_SERVER['PHP_SELF']; ?>`;
+                    window.location = `index.php?delete=${sno}`;
+                    // window.location = `<?php echo $_SERVER['PHP_SELF']; ?>`;
                     // TODO: Create a form and use post request to submit a form
                 } else {
                     console.log("no");
